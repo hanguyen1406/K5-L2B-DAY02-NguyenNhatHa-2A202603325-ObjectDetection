@@ -69,7 +69,9 @@ FP/FN; nếu có rework thì cần kiểm tra trực tiếp ảnh và box tươn
 
 ## 5. Kết quả YOLO
 
-- Runtime, GPU/CPU, phiên bản Ultralytics và Torch: chưa có log runtime trong repo.
+- Runtime, GPU/CPU, phiên bản Ultralytics và Torch: đã chạy notebook Colab với
+  checkpoint `yolo26n.pt`; log runtime/phiên bản chi tiết không được lưu trong
+  output tải về.
 - Các tham số theo notebook: `yolo26n.pt`, 50 epochs, `imgsz=640`, `batch=-1`,
   seed `20260909`; notebook dùng GPU nếu có, nếu không dùng CPU. Chưa có bằng
   chứng về tham số đã thay đổi.
@@ -78,29 +80,32 @@ FP/FN; nếu có rework thì cần kiểm tra trực tiếp ảnh và box tươn
 
 | Chỉ số trên 10 ảnh eval | Giá trị |
 |---|---:|
-| Precision | Chưa có `model_eval_metrics.json` |
-| Recall | Chưa có `model_eval_metrics.json` |
-| mAP50 | Chưa có `model_eval_metrics.json` |
-| mAP50–95 | Chưa có `model_eval_metrics.json` |
+| Precision | 0.4071 |
+| Recall | 0.2340 |
+| mAP50 | 0.2737 |
+| mAP50–95 | 0.2018 |
 
 Hai thư mục [assets/eval_predictions/](assets/eval_predictions/) và
-[assets/yolo26_runs/](assets/yolo26_runs/) chưa được giải nén vào repo. Không
-thể xác định recall thấp nhất, ảnh minh họa cụ thể hoặc vật thể trong ảnh từ
-những file hiện có; cần bổ sung output Colab trước khi nộp.
+[assets/yolo26_runs/](assets/yolo26_runs/) đã được giải nén và bổ sung vào repo.
+Ảnh prediction của 10 ảnh eval nằm trong
+[assets/eval_predictions/visuals/](assets/eval_predictions/visuals/); log/biểu đồ
+train và eval nằm trong [assets/yolo26_runs/](assets/yolo26_runs/).
 
 ### Trả lời bốn câu hỏi cuối notebook
 
-1. **Lớp recall thấp nhất:** chưa xác định vì chưa có metric theo lớp từ lần
-   chạy Colab. Cần xem `vehicle_eval`/`model_eval_metrics.json` và dẫn một ảnh
-   trong `assets/eval_predictions/visuals/`.
+1. **Lớp recall thấp nhất:** `truck`, với recall bằng 0 trong confusion matrix
+   của lần eval. Ảnh [drive_059.jpg](assets/eval_predictions/visuals/drive_059.jpg)
+   minh họa một xe truck nhỏ ở làn đường; model chỉ dự đoán yếu (confidence
+   khoảng 0.55), cho thấy khó nhận diện lớp ít mẫu.
 2. Nếu mAP50 cao nhưng mAP50–95 thấp, model thường phát hiện đúng vật thể và
    đúng lớp nhưng box chưa bám sát: tọa độ tâm, chiều rộng/chiều cao hoặc các
    cạnh box còn lệch. Cần kiểm tra trực quan các box ở nhiều ngưỡng IoU.
-3. Lỗi class liên quan guideline có thể là nhầm `car` với `truck`, `bus` hoặc
-   `van`, nhất là xe bán tải, minibus/van và xe bị che. Dữ kiện cần dùng là
-   confusion matrix/ảnh prediction cùng định nghĩa class trong
-   [GUIDELINE_MINI.md](../../GUIDELINE_MINI.md); hiện repo chưa có confusion
-   matrix hoặc quyết định guideline đã ghi nên chưa kết luận class cụ thể.
+3. Lỗi class có liên quan guideline rõ nhất là `truck` bị nhận thành `car`
+   hoặc bị bỏ sót. Confusion matrix trong
+   [vehicle_eval/confusion_matrix.png](assets/yolo26_runs/vehicle_eval/confusion_matrix.png)
+   cho thấy cột `truck` không có true positive; ảnh `drive_059` cũng cho thấy
+   truck nhỏ và khó phân biệt. Điều này phù hợp với guideline phải phân biệt xe
+   tải có thùng hàng với car, đồng thời có thể chịu ảnh hưởng class imbalance.
 4. Không dùng 10 ảnh eval để train để tránh rò rỉ dữ liệu và đánh giá lạc quan.
    Trong notebook, eval vừa là tập validation để theo dõi/chọn `best.pt`, vừa
    là tập đánh giá cuối; vì vậy không phải test độc lập hoàn toàn.
@@ -110,16 +115,16 @@ những file hiện có; cần bổ sung output Colab trước khi nộp.
 | Bước/thời điểm | Lỗi quan sát | Cách đã thử | Kết quả/còn thiếu |
 |---|---|---|---|
 | Gold QC | F1 0.5459 | Đọc JSON evaluator với ngưỡng F1 0.50 và mean IoU 0.70 | Đạt ngưỡng evaluator; mean IoU đạt 0.8483 |
-| YOLO train/eval | Không có output Colab trong repo; link yêu cầu đăng nhập | Kiểm tra notebook, `assets/` và link Colab | Cần tải `day2_colab_outputs.zip`, giải nén hai thư mục assets và lấy metrics |
+| YOLO train/eval | Cần đưa output Colab vào đúng cấu trúc nộp | Tải `day2_colab_outputs`, loại checkpoint `.pt`, chép hai folder assets | Đã có 10 ảnh prediction, log/biểu đồ train-eval và 4 metric model |
 
 ## 7. Tự đánh giá theo rubric
 
 - Định dạng YOLO: đã có 50/50 file và checker đạt.
-- Schema/guideline: schema trong repo có, nhưng [GUIDELINE_MINI.md](../../GUIDELINE_MINI.md)
-  còn trống các định nghĩa cá nhân và ba ca mơ hồ.
+- Schema/guideline: [GUIDELINE_MINI.md](../../GUIDELINE_MINI.md) đã có định nghĩa
+  bốn class, quy tắc box và ba ca mơ hồ có lý do.
 - Gold QC: đã có JSON, F1 đạt ngưỡng evaluator 0.50 và mean IoU đạt 0.70.
-- Pipeline YOLO: notebook có đủ quy trình, nhưng chưa có metrics, ảnh prediction
-  và hai thư mục assets để xác nhận phiên chạy.
+- Pipeline YOLO: đã có link Colab, 4 metric model, 10 ảnh prediction và hai
+  thư mục assets theo yêu cầu.
 - Vì các mục trên chưa đủ bằng chứng, chưa tự nhận hoàn thành toàn bộ rubric.
 
 ## 8. Công cụ AI và tài liệu tham khảo
